@@ -2,9 +2,10 @@
 
 from __future__ import print_function
 
-import subprocess
+import sys
 import time
 import socket
+import subprocess
 from blinkstick import blinkstick
 
 # Based on Internet connectivity status
@@ -45,10 +46,10 @@ def status(v):
 
   # Log status changes
   if online and connected != True:
-      print("%s is online"%(description))
+      print('%s is online'%(description))
 
   if not online and connected != False:
-      print("%s is offline"%(description))
+      print('%s is offline'%(description))
 
   # Set LED colour
   if online:
@@ -66,37 +67,50 @@ def status(v):
 
 #####################################################
 
-led = blinkstick.find_first()
-
 services = [
-  { "description": "Google Australia", "connected": None, "host": "google.com.au",  "port": 80, "index": 0 },
-  { "description": "Google USA",       "connected": None, "host": "google.com",     "port": 80, "index": 1 },
-  { "description": "Facebook",         "connected": None, "host": "facebook.com",   "port": 80, "index": 2 },
-  { "description": "Netflix",          "connected": None, "host": "netflix.com.au", "port": 80, "index": 3 },
-  { "description": "Router",           "connected": None, "host": "10.0.0.1",       "port": 53, "index": 4 },
-  { "description": "Linux2",           "connected": None, "host": "10.0.0.4",                   "index": 5 },
-  { "description": "Linux3",           "connected": None, "host": "10.0.0.5",                   "index": 6 },
-# { "description": "Laptop",           "connected": None, "host": "10.0.0.13",                  "index": 7 },
-  { "description": "Website",          "connected": None, "uri": "http://www.nigels.com/",      "index": 7 },
+  { 'description': 'Google Australia', 'connected': None, 'host': 'google.com.au',  'port': 80, 'index': 0 },
+  { 'description': 'Google USA',       'connected': None, 'host': 'google.com',     'port': 80, 'index': 1 },
+  { 'description': 'Facebook',         'connected': None, 'host': 'facebook.com',   'port': 80, 'index': 2 },
+  { 'description': 'Netflix',          'connected': None, 'host': 'netflix.com.au', 'port': 80, 'index': 3 },
+  { 'description': 'Router',           'connected': None, 'host': '10.0.0.1',       'port': 53, 'index': 4 },
+  { 'description': 'Linux2',           'connected': None, 'host': '10.0.0.4',                   'index': 5 },
+  { 'description': 'Linux3',           'connected': None, 'host': '10.0.0.134',                 'index': 6 },
+# { 'description': 'Laptop',           'connected': None, 'host': '10.0.0.13',                  'index': 7 },
+  { 'description': 'Website',          'connected': None, 'uri': 'http://www.nigels.com/',      'index': 7 },
 ]
 
-#led.off()
+led = None
 
-# Can't do anything if BlinkStick is not connected
-if led is None:
-  print("BlinkStick not found...\r\nExiting...")
-else:
+while True:
 
+  if not led:
+    while not led:
+      print('Looking for BlinkStick...')
+      try:
+        led = blinkstick.find_first()
+      except:
+        led = None
+      if not led:
+        time.sleep(2)
+
+  for s in services:
+    s['connected'] = None
   for i in range(0,8):
       led.set_color(index=i, red=0, green=0, blue=0)
 
   try:
-    while (True):
+    while True:
       for s in services:
-        s["connected"] = status(s)
+        s['connected'] = status(s)
 
   except KeyboardInterrupt:
-    print("Exiting... Bye!")
+    print('Ctrl-C Exit...')
+    if led:
+      for i in range(0,8):
+          led.set_color(index=i, red=0, green=0, blue=0)
+    sys.exit(0)
 
-  led.turn_off()
+  except:
+    led = None
+
 
